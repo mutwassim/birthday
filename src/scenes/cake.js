@@ -70,6 +70,35 @@ export function createCakeScene(smokePuff) {
   tier1.position.y = tier1Height / 2;
   cakeGroup.add(tier1);
 
+  // Tier 1 Side Inscription: "Happy Birthday Panda"
+  const tier1TextTexture = createCakeSideTextTexture({
+    text: "Happy Birthday Panda",
+    width: 4096,
+    height: 256,
+    repeatCount: 3,
+    fontSize: 78,
+    pandaScale: 1.25,
+    sparkleScale: 1.15,
+    heartScale: 1.1,
+  });
+
+  const tier1TextMat = new THREE.MeshStandardMaterial({
+    map: tier1TextTexture,
+    transparent: true,
+    roughness: 0.35,
+    metalness: 0.05,
+    side: THREE.FrontSide,
+    depthWrite: false,
+  });
+
+  const tier1Text = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.808, 1.808, 0.68, 64, 1, true),
+    tier1TextMat
+  );
+  tier1Text.position.y = tier1Height / 2;
+  tier1Text.rotation.y = -Math.PI / 3; // Align first phrase directly facing the camera
+  cakeGroup.add(tier1Text);
+
   // Tier 1 Frosting Trim (pearls)
   const pearlCount1 = 28;
   const pearlGeom = new THREE.SphereGeometry(0.1, 16, 16);
@@ -91,6 +120,35 @@ export function createCakeScene(smokePuff) {
   const tier2 = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, tier2Height, 36), tier2Mat);
   tier2.position.y = tier1Height + tier2Height / 2;
   cakeGroup.add(tier2);
+
+  // Tier 2 Side Inscription: "Happy Birthday Panda"
+  const tier2TextTexture = createCakeSideTextTexture({
+    text: "Happy Birthday Panda",
+    width: 2048,
+    height: 140,
+    repeatCount: 2,
+    fontSize: 48,
+    pandaScale: 0.85,
+    sparkleScale: 0.8,
+    heartScale: 0.75,
+  });
+
+  const tier2TextMat = new THREE.MeshStandardMaterial({
+    map: tier2TextTexture,
+    transparent: true,
+    roughness: 0.35,
+    metalness: 0.05,
+    side: THREE.FrontSide,
+    depthWrite: false,
+  });
+
+  const tier2Text = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.208, 1.208, 0.50, 64, 1, true),
+    tier2TextMat
+  );
+  tier2Text.position.y = tier1Height + tier2Height / 2;
+  tier2Text.rotation.y = -Math.PI / 2; // Align first phrase directly facing the camera
+  cakeGroup.add(tier2Text);
 
   // Tier 2 pearls
   const pearlCount2 = 20;
@@ -278,5 +336,229 @@ export function createCakeScene(smokePuff) {
       return isBlownOut;
     },
   };
+}
+
+/**
+ * Helper to draw a cute, vector-styled baby panda face on canvas
+ */
+function drawCutePanda(ctx, x, y, size = 1) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(size, size);
+
+  // 1. Black Ears
+  ctx.fillStyle = "#1e1e24";
+  ctx.beginPath();
+  ctx.arc(-14, -13, 7, 0, Math.PI * 2);
+  ctx.arc(14, -13, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Pink Inner Ears
+  ctx.fillStyle = "#f472b6";
+  ctx.beginPath();
+  ctx.arc(-14, -13, 3.5, 0, Math.PI * 2);
+  ctx.arc(14, -13, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 3. Head with subtle shadow
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.18)";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 2;
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(0, 0, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Head delicate outline
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.12)";
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // 4. Black Eye Patches (tilted ovals)
+  ctx.fillStyle = "#1e1e24";
+  ctx.beginPath();
+  ctx.ellipse(-7, -1, 5, 6.5, -0.25, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(7, -1, 5, 6.5, 0.25, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 5. White Sparkle Glints in eyes
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(-8, -3, 1.8, 0, Math.PI * 2);
+  ctx.arc(6, -3, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 6. Blushing Pink Cheeks
+  ctx.fillStyle = "rgba(244, 114, 182, 0.75)";
+  ctx.beginPath();
+  ctx.ellipse(-12, 5, 3.5, 2, 0, 0, Math.PI * 2);
+  ctx.ellipse(12, 5, 3.5, 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 7. Nose
+  ctx.fillStyle = "#1e1e24";
+  ctx.beginPath();
+  ctx.ellipse(0, 3, 2.5, 1.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 8. Sweet Smile
+  ctx.strokeStyle = "#1e1e24";
+  ctx.lineWidth = 1.4;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.arc(-2.5, 5.5, 2.5, 0.1 * Math.PI, 0.9 * Math.PI);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(2.5, 5.5, 2.5, 0.1 * Math.PI, 0.9 * Math.PI);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/**
+ * 4-pointed golden sparkle star
+ */
+function drawSparkle(ctx, x, y, size = 1, color = "#ffd166") {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(size, size);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, -14);
+  ctx.quadraticCurveTo(0, 0, 14, 0);
+  ctx.quadraticCurveTo(0, 0, 0, 14);
+  ctx.quadraticCurveTo(0, 0, -14, 0);
+  ctx.quadraticCurveTo(0, 0, 0, -14);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Sweet little royal icing heart
+ */
+function drawHeart(ctx, x, y, size = 1, color = "#f43f5e") {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(size, size);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, 4);
+  ctx.bezierCurveTo(-8, -6, -14, 2, 0, 14);
+  ctx.bezierCurveTo(14, 2, 8, -6, 0, 4);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Creates high-res canvas texture repeated seamlessly around the cylinder side
+ */
+function createCakeSideTextTexture({
+  text = "Happy Birthday Panda",
+  width = 4096,
+  height = 256,
+  repeatCount = 3,
+  fontSize = 78,
+  pandaScale = 1.25,
+  sparkleScale = 1.15,
+  heartScale = 1.1,
+}) {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
+
+    const segmentWidth = width / repeatCount;
+    const centerY = height / 2;
+
+    ctx.font = `italic 700 ${fontSize}px 'Great Vibes', 'Caveat', cursive, sans-serif`;
+    ctx.textBaseline = "middle";
+
+    const textMetrics = ctx.measureText(text);
+    const textWidth = textMetrics.width;
+
+    // Dimensions of icons
+    const sparkleSpacing = 50 * sparkleScale;
+    const pandaSpacing = 55 * pandaScale;
+    const heartSpacing = 45 * heartScale;
+    const totalGroupWidth = sparkleSpacing + textWidth + pandaSpacing + heartSpacing;
+
+    for (let i = 0; i < repeatCount; i++) {
+      const segmentCenterX = segmentWidth * i + segmentWidth / 2;
+      const groupStartX = segmentCenterX - totalGroupWidth / 2;
+
+      // 1. Left Sparkle
+      drawSparkle(ctx, groupStartX + sparkleSpacing * 0.4, centerY, sparkleScale, "#ffd166");
+
+      // 2. Center Text
+      const textX = groupStartX + sparkleSpacing + textWidth / 2;
+
+      ctx.save();
+      ctx.textAlign = "center";
+
+      // Royal icing drop-shadow (gives 3D physical rise off cake)
+      ctx.shadowColor = "rgba(180, 50, 80, 0.4)";
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 4;
+
+      // Outer piped white frosting border
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.lineWidth = Math.max(6, Math.round(fontSize * 0.12));
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeText(text, textX, centerY);
+      ctx.restore();
+
+      // Rich royal raspberry gradient body
+      const gradient = ctx.createLinearGradient(0, centerY - fontSize * 0.5, 0, centerY + fontSize * 0.5);
+      gradient.addColorStop(0, "#f43f5e");
+      gradient.addColorStop(0.5, "#be123c");
+      gradient.addColorStop(1, "#881337");
+
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.fillStyle = gradient;
+      ctx.fillText(text, textX, centerY);
+
+      // Glossy top highlight line
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+      ctx.lineWidth = Math.max(1.5, fontSize * 0.035);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeText(text, textX, centerY - 2);
+      ctx.restore();
+
+      // 3. Cute Panda
+      const pandaX = groupStartX + sparkleSpacing + textWidth + pandaSpacing * 0.5;
+      drawCutePanda(ctx, pandaX, centerY, pandaScale);
+
+      // 4. Right Heart
+      const heartX = pandaX + pandaSpacing * 0.5 + heartSpacing * 0.5;
+      drawHeart(ctx, heartX, centerY - 4, heartScale, "#f43f5e");
+    }
+  }
+
+  draw();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.needsUpdate = true;
+
+  if (typeof document !== "undefined" && document.fonts) {
+    document.fonts.ready.then(() => {
+      draw();
+      texture.needsUpdate = true;
+    });
+  }
+
+  return texture;
 }
 
