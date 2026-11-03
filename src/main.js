@@ -286,17 +286,18 @@ const messageController = setupMessageScene(() => {
     );
   }
 
-  // Camera for carousel view
+  // Camera for carousel view (pulled back on mobile portrait to fit view)
+  const isMobile = window.innerWidth <= 600;
   gsap.to(camera.position, {
     x: 0,
-    y: 1.2,
-    z: 8.8,
+    y: isMobile ? 0.9 : 1.2,
+    z: isMobile ? 12.0 : 8.8,
     duration: 1.8,
     ease: "power2.inOut",
   });
   gsap.to(controls.target, {
     x: 0,
-    y: 1.2,
+    y: isMobile ? 0.9 : 1.2,
     z: 0,
     duration: 1.8,
     ease: "power2.inOut",

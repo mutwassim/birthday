@@ -30,8 +30,15 @@ export function createGalleryScene(camera, raycaster) {
   ];
 
   const totalCards = photoList.length;
-  // Dynamically scale radius so cards are spaced around carousel
-  const radius = Math.max(5.2, totalCards * 0.85);
+
+  function getResponsiveSettings() {
+    const isMobile = window.innerWidth <= 600;
+    const cardScale = isMobile ? 0.75 : 1.0;
+    const radius = Math.max(isMobile ? 4.4 : 5.2, totalCards * (isMobile ? 0.72 : 0.85));
+    return { isMobile, cardScale, radius };
+  }
+
+  let { isMobile, cardScale, radius } = getResponsiveSettings();
 
   photoList.forEach((photoUrl, i) => {
     const cardGroup = new THREE.Group();
@@ -40,11 +47,11 @@ export function createGalleryScene(camera, raycaster) {
     // Position along cylinder/carousel
     const x = Math.sin(angle) * radius;
     const z = Math.cos(angle) * radius;
-    const y = Math.sin(i * 1.5) * 0.35; // Gentle wave
+    const y = Math.sin(i * 1.5) * 0.35;
 
     cardGroup.position.set(x, y, z);
-    // Face outward from center
     cardGroup.rotation.y = angle;
+    cardGroup.scale.set(cardScale, cardScale, cardScale);
 
     // 1. Polaroid White Frame
     const frameMat = new THREE.MeshStandardMaterial({
@@ -124,7 +131,7 @@ export function createGalleryScene(camera, raycaster) {
     cardGroup.userData = {
       index: i,
       baseAngle: angle,
-      baseScale: 1,
+      baseScale: cardScale,
       isZoomed: false,
       frameMesh,
     };
@@ -144,7 +151,8 @@ export function createGalleryScene(camera, raycaster) {
     const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
     const deltaX = clientX - previousMouseX;
     previousMouseX = clientX;
-    targetAngle += deltaX * 0.005;
+    const sens = window.innerWidth <= 600 ? 0.0085 : 0.005;
+    targetAngle += deltaX * sens;
   }
 
   function onPointerUp() {
@@ -155,10 +163,25 @@ export function createGalleryScene(camera, raycaster) {
     targetAngle += e.deltaY * 0.0015;
   }
 
-  window.addEventListener("pointerdown", onPointerDown);
-  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerdown", onPointerDown, { passive: true });
+  window.addEventListener("pointermove", onPointerMove, { passive: true });
   window.addEventListener("pointerup", onPointerUp);
   window.addEventListener("wheel", onWheel, { passive: true });
+
+  // Handle Resize for Responsive Carousel
+  function handleResize() {
+    const settings = getResponsiveSettings();
+    cardScale = settings.cardScale;
+    radius = settings.radius;
+
+    cards.forEach((card) => {
+      card.userData.baseScale = cardScale;
+      if (activeCard !== card) {
+        card.scale.set(cardScale, cardScale, cardScale);
+      }
+    });
+  }
+  window.addEventListener("resize", handleResize);
 
   // Click / Tap to Zoom on a Photo
   function handleCardClick(intersectedObject) {
@@ -170,19 +193,41 @@ export function createGalleryScene(camera, raycaster) {
     if (!clickedGroup || clickedGroup.userData.index === undefined) return;
 
     soundManager.playClick();
+    const isMob = window.innerWidth <= 600;
+    const defScale = clickedGroup.userData.baseScale || (isMob ? 0.75 : 1.0);
+    const zoomFactor = isMob ? 1.2 : 1.35;
 
     if (activeCard === clickedGroup) {
       // Zoom out
-      gsap.to(clickedGroup.scale, { x: 1, y: 1, z: 1, duration: 0.5, ease: "power2.out" });
+      gsap.to(clickedGroup.scale, {
+        x: defScale,
+        y: defScale,
+        z: defScale,
+        duration: 0.5,
+        ease: "power2.out",
+      });
       activeCard = null;
     } else {
       // Reset previous
       if (activeCard) {
-        gsap.to(activeCard.scale, { x: 1, y: 1, z: 1, duration: 0.4, ease: "power2.out" });
+        const prevBase = activeCard.userData.baseScale || (isMob ? 0.75 : 1.0);
+        gsap.to(activeCard.scale, {
+          x: prevBase,
+          y: prevBase,
+          z: prevBase,
+          duration: 0.4,
+          ease: "power2.out",
+        });
       }
       // Zoom in
       activeCard = clickedGroup;
-      gsap.to(clickedGroup.scale, { x: 1.35, y: 1.35, z: 1.35, duration: 0.6, ease: "back.out(1.8)" });
+      gsap.to(clickedGroup.scale, {
+        x: defScale * zoomFactor,
+        y: defScale * zoomFactor,
+        z: defScale * zoomFactor,
+        duration: 0.6,
+        ease: "back.out(1.8)",
+      });
     }
   }
 
@@ -211,6 +256,7 @@ export function createGalleryScene(camera, raycaster) {
     window.removeEventListener("pointermove", onPointerMove);
     window.removeEventListener("pointerup", onPointerUp);
     window.removeEventListener("wheel", onWheel);
+    window.removeEventListener("resize", handleResize);
   }
 
   return {

@@ -150,9 +150,9 @@ export function setupMessageScene(onProceedToGallery) {
     }
   }
 
-  // Subtle Mouse Parallax
+  // Subtle Mouse Parallax (desktop only)
   function handleMouseMove(e) {
-    if (!cardEl || messageEl.classList.contains("hidden")) return;
+    if (!cardEl || messageEl.classList.contains("hidden") || window.innerWidth <= 768) return;
     const x = (e.clientX / window.innerWidth - 0.5) * 12;
     const y = (e.clientY / window.innerHeight - 0.5) * 12;
     gsap.to(cardEl, {
