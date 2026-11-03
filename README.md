@@ -83,8 +83,8 @@ export const PHOTOS = [
   "/photos/photo5.svg"
 ];
 
-// 5. Background Music (Add an mp3 into /public/music.mp3)
-export const MUSIC = "/music.mp3";
+// 5. Background Music (Add an mp3 into /public/1103.mp3)
+export const MUSIC = "/1103.mp3";
 ```
 
 ### Adding Your Own Photos:
@@ -100,7 +100,7 @@ export const MUSIC = "/music.mp3";
    ```
 
 ### Adding Your Own Music:
-- Place any `.mp3` audio file at [`public/music.mp3`](./public/music.mp3).
+- Place any `.mp3` audio file at [`public/1103.mp3`](./public/1103.mp3).
 - If no file is provided, the built-in Web Audio chime music box will play automatically.
 
 ---

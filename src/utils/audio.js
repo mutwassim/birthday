@@ -12,76 +12,142 @@ class SoundManager {
     this.masterGain = null;
     this.musicGain = null;
     this.sfxGain = null;
+
+    // Preload audio immediately on app startup so it buffers early
+    this.preloadMusic();
+
+    // Listen for tab visibility changes to keep audio playing smoothly
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && this.hasUnlocked && !this.isMuted) {
+          if (this.ctx && this.ctx.state === "suspended") {
+            this.ctx.resume().catch(() => {});
+          }
+          if (this.audioElement && this.audioElement.paused && !this.isUsingFallbackSynth) {
+            this.audioElement.play().catch(() => {});
+          }
+        }
+      });
+    }
+  }
+
+  preloadMusic() {
+    if (typeof window === "undefined") return;
+    try {
+      if (!this.audioElement) {
+        this.audioElement = new Audio();
+        this.audioElement.src = MUSIC;
+        this.audioElement.loop = true;
+        this.audioElement.preload = "auto";
+        this.audioElement.volume = 0; // Starts silent, fades in smoothly on open
+
+        // Seamless loop fallback: in case native loop has a hitch
+        this.audioElement.addEventListener("ended", () => {
+          this.audioElement.currentTime = 0;
+          this.audioElement.play().catch(() => {});
+        });
+
+        // Resume automatically if connection stalled temporarily
+        this.audioElement.addEventListener("stalled", () => {
+          if (this.hasUnlocked && !this.isMuted && this.audioElement.paused) {
+            this.audioElement.play().catch(() => {});
+          }
+        });
+
+        // Preload file data into browser buffer right now
+        this.audioElement.load();
+      }
+    } catch (err) {
+      console.warn("Audio preloading error:", err);
+    }
   }
 
   init() {
     if (this.hasUnlocked) return;
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
+    if (AudioContextClass) {
+      this.ctx = new AudioContextClass();
 
-    this.ctx = new AudioContextClass();
+      // Master, Music, and SFX gain nodes
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(1, this.ctx.currentTime);
+      this.masterGain.connect(this.ctx.destination);
 
-    // Master, Music, and SFX gain nodes
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(1, this.ctx.currentTime);
-    this.masterGain.connect(this.ctx.destination);
+      this.musicGain = this.ctx.createGain();
+      this.musicGain.gain.setValueAtTime(0, this.ctx.currentTime);
+      this.musicGain.connect(this.masterGain);
 
-    this.musicGain = this.ctx.createGain();
-    this.musicGain.gain.setValueAtTime(0, this.ctx.currentTime);
-    this.musicGain.connect(this.masterGain);
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.setValueAtTime(0.7, this.ctx.currentTime);
+      this.sfxGain.connect(this.masterGain);
 
-    this.sfxGain = this.ctx.createGain();
-    this.sfxGain.gain.setValueAtTime(0.7, this.ctx.currentTime);
-    this.sfxGain.connect(this.masterGain);
-
-    if (this.ctx.state === "suspended") {
-      this.ctx.resume();
+      if (this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
     }
+
     this.hasUnlocked = true;
 
-    // Try loading external music file first
-    this.loadExternalMusic();
+    // Start background music seamlessly
+    this.playExternalMusic();
   }
 
-  loadExternalMusic() {
-    try {
-      this.audioElement = new Audio();
-      this.audioElement.src = MUSIC;
-      this.audioElement.loop = true;
-      this.audioElement.volume = 0;
-      this.audioElement.preload = "auto";
+  playExternalMusic() {
+    if (!this.audioElement) {
+      this.preloadMusic();
+    }
+    if (!this.audioElement) return;
 
-      let played = false;
-      const startPlayback = () => {
-        if (played) return;
-        played = true;
-        this.audioElement
-          .play()
+    if (this.isMuted) {
+      this.audioElement.muted = true;
+      return;
+    }
+
+    let started = false;
+    const startPlayback = () => {
+      if (started) return;
+      started = true;
+      
+      const playPromise = this.audioElement.play();
+      if (playPromise !== undefined) {
+        playPromise
           .then(() => {
-            gsap.to(this.audioElement, { volume: 0.65, duration: 3 });
-            if (this.audioElement.duration && this.audioElement.duration < 5) {
-              this.startFallbackMusicBox();
-            }
+            // Smoothly ramp up the volume over 2.5s for zero pop/crackle
+            gsap.to(this.audioElement, {
+              volume: 0.7,
+              duration: 2.5,
+              ease: "power1.out",
+            });
           })
           .catch((err) => {
-            console.warn("Audio play prevented, starting fallback:", err);
-            this.startFallbackMusicBox();
+            console.warn("Direct play prevented, attaching tap handler:", err);
+            const userTapPlay = () => {
+              this.audioElement.play().then(() => {
+                gsap.to(this.audioElement, { volume: 0.7, duration: 2 });
+              }).catch(() => {
+                this.startFallbackMusicBox();
+              });
+              window.removeEventListener("pointerdown", userTapPlay);
+            };
+            window.addEventListener("pointerdown", userTapPlay, { once: true });
           });
-      };
+      }
+    };
 
+    // If audio is already loaded/buffered, play immediately
+    if (this.audioElement.readyState >= 2) {
+      startPlayback();
+    } else {
       this.audioElement.addEventListener("canplay", startPlayback, { once: true });
       this.audioElement.addEventListener("canplaythrough", startPlayback, { once: true });
-
-      this.audioElement.addEventListener("error", (e) => {
-        console.warn("Audio element error, starting fallback:", e);
-        this.startFallbackMusicBox();
-      });
-
-      this.audioElement.load();
-    } catch (err) {
-      console.warn("Audio initialization error:", err);
-      this.startFallbackMusicBox();
+      // Call load/play directly to trigger buffering if needed
+      startPlayback();
     }
+
+    this.audioElement.addEventListener("error", (e) => {
+      console.warn("Audio element error, starting fallback synth:", e);
+      this.startFallbackMusicBox();
+    }, { once: true });
   }
 
   startFallbackMusicBox() {
@@ -275,6 +341,9 @@ class SoundManager {
     }
     if (this.audioElement) {
       this.audioElement.muted = this.isMuted;
+      if (!this.isMuted && this.audioElement.paused && this.hasUnlocked) {
+        this.audioElement.play().catch(() => {});
+      }
     }
     return this.isMuted;
   }
