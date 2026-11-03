@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>Happy 18th Birthday Bisma! ✨ A Special Celebration</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎂</text></svg>"
+    />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Caveat:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- 3D WebGL Canvas -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Top Navigation / Controls -->
+    <header class="app-header">
+      <div class="header-brand">
+        <span class="sparkle-icon">✨</span>
+        <span class="brand-text">Birthday Celebration</span>
+      </div>
+      <button id="btn-sound-toggle" class="sound-toggle-btn" aria-label="Toggle Sound">
+        <span class="sound-bar bar-1"></span>
+        <span class="sound-bar bar-2"></span>
+        <span class="sound-bar bar-3"></span>
+        <span class="sound-bar bar-4"></span>
+      </button>
+    </header>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-overlay">
+      <div class="loading-box">
+        <div class="loading-sparkle">✨</div>
+        <h2 class="loading-text">Preparing something special...</h2>
+        <div class="progress-track">
+          <div id="progress-bar" class="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UI Overlay Layer -->
+    <div id="ui-container" class="ui-container">
+      <!-- 1. Intro Scene -->
+      <section id="scene-intro" class="scene-overlay active">
+        <div id="intro-content" class="intro-card">
+          <div class="intro-badge">A GIFT FOR YOU</div>
+          <h1 class="intro-heading">Someone has something special for you…</h1>
+          <p class="intro-subtext">Put on your headphones for the best experience 🎧</p>
+          <button id="btn-open" class="btn-primary pulse-btn">
+            Tap to open ✨
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Cake Banner -->
+      <section id="scene-cake-banner" class="hud-banner hidden">
+        <div class="hud-content">
+          <span class="hud-pill">✨ Tap the cake or button below</span>
+          <h2 class="hud-title">Make a wish! 🎂</h2>
+          <button id="btn-blow-candles" class="btn-primary btn-blow">
+            Blow out the candles 🕯️💨
+          </button>
+        </div>
+      </section>
+
+      <!-- 3. Celebration Overlay -->
+      <section id="scene-celebration" class="scene-overlay hidden">
+        <div class="celebration-card">
+          <div id="celebration-badge" class="celebration-badge">✨ IT'S TIME TO CELEBRATE ✨</div>
+          <h1 id="celebration-title" class="celebration-title">Happy 18th Birthday, Bisma! 🎉</h1>
+          <p id="celebration-subtitle" class="celebration-subtitle">
+            May all your dreams and wishes come true today and every day!
+          </p>
+          <button id="btn-to-message" class="btn-primary">
+            Read Your Letter 💌
+          </button>
+        </div>
+      </section>
+
+      <!-- 3.5 Secret PIN Verification Modal -->
+      <section id="scene-pin" class="scene-overlay hidden">
+        <div id="pin-card" class="pin-card">
+          <div id="pin-lock-icon" class="pin-lock-icon">🔐</div>
+          <div class="pin-badge">SECURITY CHECK</div>
+          <h2 class="pin-title">A Secret Just for You</h2>
+          <p class="pin-hint">Please enter your mobile phone's PIN to unlock your birthday letter 📱✨</p>
+          
+          <form id="pin-form" class="pin-form" onsubmit="return false;">
+            <div class="pin-input-wrapper">
+              <input
+                type="password"
+                id="pin-input"
+                class="pin-input"
+                maxlength="6"
+                placeholder="Enter 6-digit PIN"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                autocomplete="off"
+              />
+            </div>
+            <p id="pin-error-msg" class="pin-error-msg hidden"></p>
+            <button type="submit" id="btn-unlock-pin" class="btn-primary btn-unlock">
+              Unlock Letter ✨
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 4. Personal Message Overlay -->
+      <section id="scene-message" class="scene-overlay hidden">
+        <div id="message-card" class="letter-card">
+          <div id="letter-header-area"></div>
+          <div class="letter-scroll-area">
+            <div id="message-lines" class="letter-body"></div>
+          </div>
+          <div id="letter-footer-area"></div>
+        </div>
+      </section>
+
+      <!-- 5. Memories Gallery HUD -->
+      <section id="scene-gallery-hud" class="hud-banner hidden">
+        <div class="hud-content">
+          <span class="hud-pill">📸 Memories Carousel</span>
+          <p class="hud-instructions">Drag or swipe to rotate • Tap a polaroid to zoom in</p>
+          <button id="btn-to-finale" class="btn-primary">
+            The Grand Finale 🎆
+          </button>
+        </div>
+      </section>
+
+      <!-- 6. Finale Scene -->
+      <section id="scene-finale" class="scene-overlay hidden">
+        <div class="finale-card">
+          <div id="finale-badge" class="celebration-badge">FOREVER CELEBRATING YOU</div>
+          <h1 id="finale-title" class="finale-title">Happy 18th Birthday, Bisma!</h1>
+          <p id="finale-subtitle" class="finale-subtitle">
+            Here’s to another magnificent trip around the sun! 🌟
+          </p>
+          <div id="finale-pending-card" class="pending-note-card">
+            <span class="pending-note-icon">🎁</span>
+            <p id="finale-pending-note" class="pending-note-text">
+              The treat and gifts are pending, hope you like this small effort ❤️
+            </p>
+          </div>
+          <div id="finale-signature" class="finale-signature">From always yours,<br />Basit</div>
+          <button id="btn-replay" class="btn-primary pulse-btn">
+            Replay Experience ↺
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Script Entry -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
