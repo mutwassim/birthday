@@ -20,10 +20,14 @@ server.stderr.on("data", (data) => console.error(`[Server Error] ${data}`));
 
 await new Promise((res) => setTimeout(res, 2500));
 
+const tempDir = path.resolve(`./temp-profile-${Date.now()}`);
+fs.mkdirSync(tempDir, { recursive: true });
+
 console.log("Launching Chrome in Mobile Viewport (390x844)...");
 const browser = await puppeteer.launch({
   executablePath: chromePath,
   headless: "new",
+  userDataDir: tempDir,
   args: [
     "--no-sandbox",
     "--disable-setuid-sandbox",
@@ -117,5 +121,8 @@ try {
 } finally {
   await browser.close();
   server.kill();
+  try {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  } catch {}
   process.exit(consoleErrors.length > 0 ? 1 : 0);
 }

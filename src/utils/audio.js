@@ -45,33 +45,41 @@ class SoundManager {
 
   loadExternalMusic() {
     try {
-      this.audioElement = new Audio(MUSIC);
+      this.audioElement = new Audio();
+      this.audioElement.src = MUSIC;
       this.audioElement.loop = true;
       this.audioElement.volume = 0;
+      this.audioElement.preload = "auto";
 
-      // When audio can play
-      this.audioElement.addEventListener("canplaythrough", () => {
+      let played = false;
+      const startPlayback = () => {
+        if (played) return;
+        played = true;
         this.audioElement
           .play()
           .then(() => {
-            gsap.to(this.audioElement, { volume: 0.6, duration: 3 });
-            // If placeholder/short audio, also run melodic music box
-            if (this.audioElement.duration < 5) {
+            gsap.to(this.audioElement, { volume: 0.65, duration: 3 });
+            if (this.audioElement.duration && this.audioElement.duration < 5) {
               this.startFallbackMusicBox();
             }
           })
-          .catch(() => {
+          .catch((err) => {
+            console.warn("Audio play prevented, starting fallback:", err);
             this.startFallbackMusicBox();
           });
-      });
+      };
 
-      this.audioElement.addEventListener("error", () => {
-        // Fallback to built-in dreamy music box
+      this.audioElement.addEventListener("canplay", startPlayback, { once: true });
+      this.audioElement.addEventListener("canplaythrough", startPlayback, { once: true });
+
+      this.audioElement.addEventListener("error", (e) => {
+        console.warn("Audio element error, starting fallback:", e);
         this.startFallbackMusicBox();
       });
 
       this.audioElement.load();
-    } catch {
+    } catch (err) {
+      console.warn("Audio initialization error:", err);
       this.startFallbackMusicBox();
     }
   }

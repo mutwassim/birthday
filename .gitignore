@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+temp-profile*
 
 # next.js
 /.next/

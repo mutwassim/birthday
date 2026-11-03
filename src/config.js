@@ -71,5 +71,5 @@ export const PHOTO_CAPTIONS = [
   "Our crazy & sweet rides 🛵"
 ];
 
-// Background music (in /public/music.mp3)
-export const MUSIC = "/music.mp3";
+// Background music (romantic audio uploaded by Basit)
+export const MUSIC = "/music.m4a";
